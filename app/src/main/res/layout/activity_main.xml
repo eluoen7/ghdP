@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              xmlns:app="http://schemas.android.com/apk/res-auto"
+              xmlns:tools="http://schemas.android.com/tools"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:orientation="vertical"
+              tools:context="eluoen.ghdp.MainActivity">
+
+    <include layout="@layout/toolbar_main" />
+
+
+
+    <TextView
+            android:id="@+id/txt_result"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="扫描结果" />
+
+    <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+        <EditText
+                android:id="@+id/edit_qrcode"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/scan_or_edit"
+                android:layout_weight="1"/>
+
+        <Button
+                android:id="@+id/btn_qrcode"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:text="@string/scan" />
+
+    </LinearLayout>
+
+    <Button
+            android:id="@+id/btn_search"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:text="@string/search" />
+
+    <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
+
+
+    <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="bottom">
+
+
+        <LinearLayout
+                android:id="@+id/lay_download"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_horizontal"
+                android:orientation="vertical"
+                android:visibility="visible" >
+
+            <ProgressBar
+                    android:id="@+id/pb_download"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10.0dip"
+                    android:max="100" />
+
+            <TextView
+                    android:id="@+id/txt_download"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="正在加载进度条，请稍等......"
+                    android:textSize="16sp" />
+        </LinearLayout>
+
+        <TextView
+                android:id="@+id/txt_version"
+                android:layout_below="@id/lay_download"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:text="版本号："/>
+
+
+    </RelativeLayout>
+
+
+
+
+    <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:gravity="center_horizontal">
+
+
+
+
+
+    </LinearLayout>
+
+
+
+
+</LinearLayout>
