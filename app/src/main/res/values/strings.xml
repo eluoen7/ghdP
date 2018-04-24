@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">QrCodeDemo</string>
-    <string name="scan_or_edit">scan or edit</string>
+    <string name="scan_or_edit">SCAN OR EDIT</string>
     <string name="scan">SCAN</string>
     <string name="search">查询</string>
 

@@ -17,6 +17,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.*;
 import com.google.zxing.activity.CaptureActivity;
 import eluoen.ghdp.util.Constant;
@@ -25,6 +26,9 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.concurrent.CopyOnWriteArraySet;
+import java.lang.ref.WeakReference;
+import android.app.ProgressDialog;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -35,8 +39,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private Button btnQrCode; // 扫码
     private TextView tvResult; // 结果
-    private EditText editQrCode;
 
+    private EditText editQrCode;
+    private Button btnSearch;
+    private TextView txtInfo;//查询结果
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,15 +51,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         initView();
 
+        //默认不弹出软键盘
+        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN);
 
-
-
+        //检查版本
         checkVersion();
-
-
-
-
-
 
     }
 
@@ -66,13 +68,36 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         btnQrCode = (Button) findViewById(R.id.btn_qrcode);
         btnQrCode.setOnClickListener(this);
+
+
         editQrCode = (EditText) findViewById(R.id.edit_qrcode);
+        btnSearch = (Button) findViewById(R.id.btn_search);
+        btnSearch.setOnClickListener(this);
+        txtInfo = (TextView) findViewById(R.id.txt_info);
 
         tvResult = (TextView) findViewById(R.id.txt_result);
     }
 
 
+    @Override
+    public void onClick(View view) {
+        switch (view.getId()) {
+            case R.id.btn_qrcode:
+                startQrCode();
+                break;
+            case R.id.btn_search:
+                processThreadSearch();
+                break;
+        }
+    }
 
+
+
+
+
+    /////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////以下是开始扫描/////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////////////////
 
     // 开始扫码
     private void startQrCode() {
@@ -84,15 +109,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         // 二维码扫码
         Intent intent = new Intent(MainActivity.this, CaptureActivity.class);
         startActivityForResult(intent, Constant.REQ_QR_CODE);
-    }
-
-    @Override
-    public void onClick(View view) {
-        switch (view.getId()) {
-            case R.id.btn_qrcode:
-                startQrCode();
-                break;
-        }
     }
 
     @Override
@@ -123,10 +139,77 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     Toast.makeText(MainActivity.this, "请至权限中心打开本应用的相机访问权限", Toast.LENGTH_LONG).show();
                 }
                 break;
+            case 11011:
+                //11011是自己定义的手机读写存储权限编号
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    // 获得授权，开始下载
+                    startDownFile();
+                } else {
+                    // 被禁止授权
+                    Toast.makeText(MainActivity.this, "请至权限中心打开本应用的读写手机存储权限", Toast.LENGTH_LONG).show();
+                }
+                break;
         }
     }
 
 
+
+
+
+    /////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////以下是查询检索结果//////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////////////////
+
+    private ProgressDialog progressDialog = null;
+
+    private void processThreadSearch(){
+
+        progressDialog = ProgressDialog.show(this, null, "Loading......");
+        progressDialog.setCancelable(true);
+        new Thread() {
+            public void run() {
+
+                String path = HttpUtil.IP + "/pda_updateGoods";
+                String result = HttpUtil.httpClient(null,path,"POST");
+
+                Message msg = new Message();
+                msg.obj = result;
+                handler.sendMessage(msg);
+            };
+        }.start();
+
+    }
+
+    private Handler handler = new myHandler(this);
+
+    private final static class myHandler extends Handler{
+
+        private WeakReference<MainActivity> reference = null;
+
+        private myHandler(MainActivity activity){
+            reference = new WeakReference<MainActivity>(activity);
+        }
+
+        @Override
+        public void handleMessage(Message msg) {
+            // TODO Auto-generated method stub
+            super.handleMessage(msg);
+            MainActivity activity = reference.get();
+            activity.progressDialog.dismiss();
+
+            activity.txtInfo.setText(msg.obj.toString());
+
+        }
+
+    }
+
+
+
+
+
+    /////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////以下是版本判断或更新、、/////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////////////////
 
     private void checkVersion(){
 
@@ -141,11 +224,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     }
 
-
-
     private int serverVersionCode = -1;
     private int versionCode = -1;
-
 
 
     private void processThreadUpdate() {
@@ -160,6 +240,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                     serverVersionCode = HttpUtil.vm.getVerCode();
                     versionCode = HttpUtil.getVersionCode(MainActivity.this);
+
                 } catch (Exception e) {
                     serverVersionCode = versionCode;
                 }
@@ -174,15 +255,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         // 当有消息发送出来的时候就执行Handler的这个方法
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
-
             if (versionCode != serverVersionCode) {
                 doNewVersionUpdate(MainActivity.this);
             }
         }
     };
-
-
-
 
     private void doNewVersionUpdate(final Context context) {
         String verName = HttpUtil.getVersionName(this);
@@ -202,9 +279,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             public void onClick(DialogInterface dialog,
                                                 int which) {
 
-                                lay_download.setVisibility(View.VISIBLE);
-
-                                downFile(HttpUtil.IP + HttpUtil.vm.getApkname());
+                                //如果权限没打开，则申请权限
+                                if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                                    // 申请权限，这里自定义手机读取存储权限10011，回调时判断用
+                                    ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 11011);
+                                    return;
+                                }else{
+                                    //如果已经打开，则直接开始下载
+                                    startDownFile();
+                                }
 
                             }
                         }).setNegativeButton("暂不更新", null).create();// 创建
@@ -215,6 +298,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             // TODO: handle exception
             return;
         }
+    }
+
+
+    private void startDownFile(){
+        lay_download.setVisibility(View.VISIBLE);
+
+        downFile(HttpUtil.IP + HttpUtil.vm.getApkname());
     }
 
     private int fileSize;

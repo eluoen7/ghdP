@@ -16,7 +16,7 @@ import static java.net.Proxy.Type.HTTP;
 public class HttpUtil {
 	
 	//public static String IP="http://120.77.49.216/gdsalt_dataup_pda/";
-	public static String IP="http://192.168.0.101/gdsalt_dataup_pda/";
+	public static String IP="http://120.77.49.216/gdsalt_dataup_pda/";
 	
 	public static VersionMessage vm = null;
 
@@ -171,10 +171,13 @@ public class HttpUtil {
 			urlConn.connect();
 			// 使用IO进行流数据的读取
 
-			buffer = new BufferedReader(new InputStreamReader(
-					urlConn.getInputStream(),"GBK"), 1000);
+			buffer = new BufferedReader(new InputStreamReader(urlConn.getInputStream(),"GBK"), 1000);
+
+
 			String str = buffer.readLine();
+
 			System.out.println("str:"+str);
+
 			urlConn.disconnect();
 			Gson gson = new Gson();
 			vm = gson.fromJson(str, VersionMessage.class);

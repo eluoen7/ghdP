@@ -347,7 +347,7 @@ public class CaptureActivity extends AppCompatActivity implements Callback {
             mediaPlayer.setOnCompletionListener(beepListener);
 
             AssetFileDescriptor file = getResources().openRawResourceFd(
-                    R.raw.beep);
+                    R.raw.beep2);
             try {
                 mediaPlayer.setDataSource(file.getFileDescriptor(),
                         file.getStartOffset(), file.getLength());
@@ -360,16 +360,19 @@ public class CaptureActivity extends AppCompatActivity implements Callback {
         }
     }
 
-    private static final long VIBRATE_DURATION = 200L;
+    //private static final long VIBRATE_DURATION = 200L;
 
     private void playBeepSoundAndVibrate() {
         if (playBeep && mediaPlayer != null) {
             mediaPlayer.start();
         }
-        if (vibrate) {
-            Vibrator vibrator = (Vibrator) getSystemService(VIBRATOR_SERVICE);
-            vibrator.vibrate(VIBRATE_DURATION);
-        }
+        System.out.println("--------------------------（Captureactivity:370行）扫描后提示音20180424---------------------------------");
+
+        // 屏蔽扫描后震动音20180424
+        // if (vibrate) {
+            //Vibrator vibrator = (Vibrator) getSystemService(VIBRATOR_SERVICE);
+            //vibrator.vibrate(VIBRATE_DURATION);
+        //}
     }
 
     /**
